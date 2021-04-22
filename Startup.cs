@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+//using System.Web;
 
 namespace WebApp_Middleware
 {
@@ -48,6 +50,11 @@ namespace WebApp_Middleware
             app.UseAuthorization();
 
             /// Put middleware here:
+            app.Use(async (context, next) =>
+            {
+                await context.Response.WriteAsync(context.Request.Headers["User-Agent"].ToString());
+                await next();
+            });
 
             app.UseEndpoints(endpoints =>
             {
