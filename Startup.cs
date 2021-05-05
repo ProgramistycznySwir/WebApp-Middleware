@@ -50,16 +50,47 @@ namespace WebApp_Middleware
             app.UseAuthorization();
 
             /// Put middleware here:
-            app.Use(async (context, next) =>
-            {
-                await context.Response.WriteAsync(context.Request.Headers["User-Agent"].ToString());
-                await next();
-            });
+            //app.Use(async (context, next) =>
+            //{
+            //    await context.Response.WriteAsync(context.Request.Headers["User-Agent"].ToString());
+            //    await next();
+            //});
+            //app.UseMiddleware<MyMiddleware>();
+            app.UseMyMiddleware();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
             });
+        }
+    }
+
+    public static class MyMiddlewareExtensions
+    {
+        /// <summary>
+        /// Wrapper for MyMiddleware class.
+        /// </summary>
+        /// <param name="app"></param>
+        public static void UseMyMiddleware(this IApplicationBuilder app)
+            => app.UseMiddleware<MyMiddleware>();
+    }
+
+    public class MyMiddleware
+    {
+        RequestDelegate next;
+        HashSet<string> unsuportedBrowsers = new HashSet<string> 
+            { "Edge", "EdgeChromium", "IE" };
+
+        public MyMiddleware(RequestDelegate next) => this.next = next;
+
+        public Task Invoke(HttpContext context)
+        {
+            string userAgent = context.Request.Headers["User-Agent"].ToString();
+
+            if (unsuportedBrowsers.Any(a => userAgent.Contains(a)))
+                context.Response.WriteAsync("Unsupported browser");
+
+            return next(context);
         }
     }
 }
